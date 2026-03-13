@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    '36Blocks' => [
+        'url' => env('BASE_URL_36BLOCKS'),
+        'authkey' => env('AUTHKEY_36BLOCKS', '0'),
+        'reference_id' => env('REFERENCE_ID_36BLOCKS', '0'),
+    ],
+
 ];
