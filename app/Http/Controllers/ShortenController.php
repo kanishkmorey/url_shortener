@@ -8,6 +8,7 @@ use App\Services\ClickService;
 use App\Services\UrlShortnerService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 class ShortenController extends Controller
@@ -90,25 +91,19 @@ class ShortenController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
+    public function destroy(string $id) {}
 
     public function redirect(string $code, Request $request, UrlShortnerService $service, ClickService $clickService)
     {
         try {
-            $record = $service->resolveUrl($code);
-            $redirectUrl = $record->url;
+            $record = Cache::remember($code, now()->addMinutes(1440), function () use ($code, $service) {
+                return $service->resolveUrl($code);
+            });
             $clickService->logClick($record->id, $request);
 
-            return redirect($redirectUrl);
+            return redirect($record->url);
         } catch (Throwable $e) {
-            return $this->errorResponse(
-                'Failed',
-                ['exception' => $e],
-                404
-            );
+            return $this->errorResponse('Failed', ['exception' => $e->getMessage()], 404);
         }
     }
 }
