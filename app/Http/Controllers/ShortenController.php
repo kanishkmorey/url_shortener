@@ -18,9 +18,22 @@ class ShortenController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        try {
+            $userId = $request->attributes->get('user_details')['id'];
+            $records = Url::where('user_id', $userId)
+                ->cursorPaginate(10);
+
+            return $this->successResponse($records);
+        } catch (Throwable $e) {
+            return $this->errorResponse(
+                'Failed',
+                ['exception' => $e->getMessage()],
+                500
+            );
+        }
+
     }
 
     /**
