@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUrlRequest;
 use App\Models\Url;
+use App\Services\ClickService;
 use App\Services\UrlShortnerService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -94,17 +95,19 @@ class ShortenController extends Controller
         //
     }
 
-    public function redirect(string $code, UrlShortnerService $service)
+    public function redirect(string $code, Request $request, UrlShortnerService $service, ClickService $clickService)
     {
         try {
-            $redirectUrl = $service->resolveUrl($code);
+            $record = $service->resolveUrl($code);
+            $redirectUrl = $record->url;
+            $clickService->logClick($record->id, $request);
 
             return redirect($redirectUrl);
         } catch (Throwable $e) {
             return $this->errorResponse(
                 'Failed',
-                ['exception' => $e->getMessage()],
-                500
+                ['exception' => $e],
+                404
             );
         }
     }

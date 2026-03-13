@@ -41,7 +41,7 @@ class UrlShortnerService
         try {
             $record = Url::where('short_code', $code)->first();
 
-            return $record->url;
+            return $record;
         } catch (\Throwable $e) {
             throw new \RuntimeException('No url can be found for the short code.', 0, $e);
         }

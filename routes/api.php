@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClicksController;
 use App\Http\Controllers\ShortenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -13,4 +14,7 @@ Route::get('/health', function () {
 });
 
 Route::resource('shorten', ShortenController::class)->only(['store'])
+    ->middleware('access.token.auth');
+
+Route::resource('/clicks', ClicksController::class)
     ->middleware('access.token.auth');

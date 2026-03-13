@@ -25,4 +25,9 @@ class Url extends Model
         'is_active' => 'boolean',
         'is_blocked' => 'boolean',
     ];
+
+    public function clicks()
+    {
+        return $this->hasMany(Click::class);
+    }
 }
