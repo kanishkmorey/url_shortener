@@ -2,17 +2,24 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Url;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreUrlRequest extends FormRequest
+class UpdateUrlRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        $userId = $this->attributes->get('user_details')['id'];
+
+        $urlId = $this->route('shorten');
+
+        return Url::where('id', $urlId)
+            ->where('user_id', $userId)
+            ->exists();
     }
 
     /**
@@ -23,17 +30,10 @@ class StoreUrlRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'url' => 'required|url|max:2048',
-            'title' => 'required|string|max:50',
-            'description' => 'nullable|string|max:500',
-            'is_active' => 'boolean',
+            'url' => 'sometimes|url|max:2048',
+            'title' => 'sometimes|string|max:50',
+            'description' => 'sometimes|string|max:500',
+            'is_active' => 'sometimes|boolean',
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        if (! $this->has('is_active')) {
-            $this->merge(['is_active' => true]);
-        }
     }
 }
