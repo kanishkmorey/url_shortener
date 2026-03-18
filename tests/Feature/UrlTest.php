@@ -26,6 +26,13 @@ class UrlTest extends TestCase
         });
     }
 
+    public function test_user_can_view_url()
+    {
+        $response = $this->getJson('/api/url');
+
+        $response->assertStatus(200);
+    }
+
     public function test_user_can_create_url()
     {
         $response = $this->postJson('/api/shorten', [
