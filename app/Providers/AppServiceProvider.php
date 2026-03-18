@@ -12,7 +12,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(SnowflakeService::class, function() {
+        $this->app->singleton(SnowflakeService::class, function () {
 
             // Using worker PID as machine ID, as currently intended for single machine.
             $machineId = getmypid() % 1024;

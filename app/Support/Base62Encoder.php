@@ -17,7 +17,7 @@ class Base62Encoder
 
         while ($number > 0) {
             $remainder = $number % $base;
-            $result = self::CHARACTERS[$remainder] . $result;
+            $result = self::CHARACTERS[$remainder].$result;
             $number = intdiv($number, $base);
         }
 

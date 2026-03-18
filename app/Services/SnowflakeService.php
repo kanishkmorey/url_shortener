@@ -2,21 +2,24 @@
 
 namespace App\Services;
 
-use App\Support\Base62Encoder;
-
 class SnowflakeService
 {
     private int $machineId;
+
     private int $sequence = 0;
+
     private int $lastTimestamp = -1;
 
     private int $epoch = 1704067200000; // Jan 1 2024
 
     private int $machineIdBits = 10;
+
     private int $sequenceBits = 12;
 
     private int $machineIdShift;
+
     private int $timestampShift;
+
     private int $sequenceMask;
 
     public function __construct(int $machineId)
