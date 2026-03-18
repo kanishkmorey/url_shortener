@@ -19,13 +19,15 @@ class LogClickJob implements ShouldQueue
 
     public function handle(): void
     {
+        $location = geoip($this->ip);
+
         Click::create([
             'url_id' => $this->url_id,
             'clicked_at' => now(),
             'ip' => $this->ip ? inet_pton($this->ip) : null,
             'referrer' => $this->referrer,
             'user_agent' => $this->user_agent,
-            'country' => null,
+            'country' => $location->iso_code ?? null,
         ]);
     }
 }
