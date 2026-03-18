@@ -115,8 +115,12 @@ class ShortenController extends Controller
     public function update(UpdateUrlRequest $request, string $id)
     {
         try {
+            $validated = $request->validated();
             $record = Url::find($id);
-            $record->update($request->validated());
+            $record->update($validated);
+
+            Cache::forget($record->short_code);
+            Cache::put($record->short_code, $record, now()->addMinute(1440));
 
             return $this->successResponse($record, 'URL updated successfully');
         } catch (Throwable $e) {
@@ -132,6 +136,7 @@ class ShortenController extends Controller
         try {
             $record = Url::find($id);
             $record->delete();
+            Cache::forget($record->short_code);
 
             return $this->successResponse(null, 'URL deleted successfully', 204);
         } catch (Throwable $e) {
