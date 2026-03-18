@@ -8,7 +8,10 @@ Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 });
 
-Route::resource('shorten', ShortenController::class)->only(['index', 'show', 'store', 'update', 'destroy'])
+Route::post('shorten', [ShortenController::class, 'store'])
+    ->middleware('access.token.auth');
+
+Route::resource('url', ShortenController::class)->only(['index', 'show', 'update', 'destroy'])
     ->middleware('access.token.auth');
 
 Route::resource('/clicks', ClicksController::class)->only(['index', 'delete'])

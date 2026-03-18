@@ -15,7 +15,7 @@ class DeleteUrlRequest extends FormRequest
     {
         $userId = $this->attributes->get('user_details')['id'];
 
-        $urlId = $this->route('shorten');
+        $urlId = $this->route('url');
 
         return Url::where('id', $urlId)
             ->where('user_id', $userId)
