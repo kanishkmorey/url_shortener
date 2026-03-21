@@ -2,13 +2,16 @@
 
 namespace App\Jobs;
 
-use App\Models\Click;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Redis;
 
 class LogClickJob implements ShouldQueue
 {
     use Queueable;
+
+    public const REDIS_KEY = 'clicks:buffer';
 
     public function __construct(
         private int $url_id,
@@ -21,13 +24,21 @@ class LogClickJob implements ShouldQueue
     {
         $location = geoip($this->ip);
 
-        Click::create([
+        $clickData = json_encode([
             'url_id' => $this->url_id,
-            'clicked_at' => now(),
-            'ip' => $this->ip ? inet_pton($this->ip) : null,
+            'clicked_at' => now()->toDateTimeString(),
+            'ip' => $this->ip ?? null,
             'referrer' => $this->referrer,
             'user_agent' => $this->user_agent,
             'country' => $location->iso_code ?? null,
         ]);
+
+        $bufferSize = Redis::rpush(self::REDIS_KEY, $clickData);
+
+        $batchSize = (int) config('clicks.batch_size', 100);
+
+        if ($bufferSize >= $batchSize) {
+            Artisan::call('clicks:flush');
+        }
     }
 }
