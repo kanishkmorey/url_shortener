@@ -55,12 +55,12 @@ class ShortenController extends Controller
     {
         try {
             $validated = $request->validated();
-            $generatedCode = $service->generateCode();
+            $shortCode = $validated['short_code'] ?? $service->generateCode();
 
             Url::create([
                 'user_id' => $request->attributes->get('user_details')['id'],
                 'url' => $validated['url'],
-                'short_code' => $generatedCode,
+                'short_code' => $shortCode,
                 'is_active' => $validated['is_active'],
                 'is_blocked' => false,
                 'title' => $validated['title'] ?? null,
@@ -69,7 +69,7 @@ class ShortenController extends Controller
             ]);
 
             return $this->successResponse(
-                ['url' => config('app.url').'/'.$generatedCode],
+                ['url' => config('app.url').'/'.$shortCode],
                 'URL shortened successfully'
             );
         } catch (Throwable $e) {
