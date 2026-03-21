@@ -4,18 +4,15 @@ use App\Http\Controllers\ClicksController;
 use App\Http\Controllers\ShortenController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', function () {
-    return response()->json(['status' => 'ok']);
+Route::middleware(['access.token.auth', 'throttle:api'])->group(function () {
+    Route::post('shorten', [ShortenController::class, 'store']);
+    Route::resource('url', ShortenController::class)->only(['index', 'show', 'update', 'destroy']);
+    Route::get('url/{url}/stat', [ShortenController::class, 'getUrlStats']);
+    Route::resource('/clicks', ClicksController::class)->only(['index', 'destroy']);
 });
 
-Route::post('shorten', [ShortenController::class, 'store'])
-    ->middleware('access.token.auth');
-
-Route::resource('url', ShortenController::class)->only(['index', 'show', 'update', 'destroy'])
-    ->middleware('access.token.auth');
-
-Route::get('url/{url}/stat', [ShortenController::class, 'getUrlStats'])
-    ->middleware('access.token.auth');
-
-Route::resource('/clicks', ClicksController::class)->only(['index', 'destroy'])
-    ->middleware('access.token.auth');
+Route::middleware('throttle:redirect')->group(function () {
+    Route::get('/health', function () {
+        return response()->json(['status' => 'ok']);
+    });
+});
