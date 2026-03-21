@@ -7,8 +7,6 @@ use App\Models\Click;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Redis;
 
-use function Illuminate\Log\log;
-
 class FlushClicksCommand extends Command
 {
     protected $signature = 'clicks:flush';
