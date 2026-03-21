@@ -37,6 +37,7 @@ class StoreUrlRequest extends FormRequest
                 'unique:urls,short_code',
                 new NotReservedSlug,
             ],
+            'expires_at' => 'nullable|date_format:Y-m-d H:i:s',
         ];
     }
 

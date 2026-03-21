@@ -34,6 +34,7 @@ class UpdateUrlRequest extends FormRequest
             'title' => 'sometimes|string|max:50',
             'description' => 'sometimes|string|max:500',
             'is_active' => 'sometimes|boolean',
+            'expires_at' => 'nullable|date_format:Y-m-d H:i:s',
         ];
     }
 }

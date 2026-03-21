@@ -20,12 +20,14 @@ class Url extends Model
         'title',
         'description',
         'meta',
+        'expires_at'
     ];
 
     protected $casts = [
         'meta' => 'array',
         'is_active' => 'boolean',
         'is_blocked' => 'boolean',
+        'expires_at' => 'datetime',
     ];
 
     public function clicks()

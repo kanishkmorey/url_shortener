@@ -66,6 +66,7 @@ class ShortenController extends Controller
                 'title' => $validated['title'] ?? null,
                 'description' => $validated['description'] ?? null,
                 'meta' => [],
+                'expires_at' => $validated['expires_at'] ?? null,
             ]);
 
             return $this->successResponse(
@@ -150,7 +151,7 @@ class ShortenController extends Controller
      * Redirects from shortened URL to the original URL.
      *
      * Checks if URL record is present in cache, if not fetches from db and puts in cache too.
-     * Checks in the record if it is blocked or isn't active.
+     * Checks in the record if it is expired, blocked or isn't active.
      * Queues a job for logging the click.
      * Redirects the user to the original URL.
      */
@@ -165,13 +166,16 @@ class ShortenController extends Controller
             if ($record->is_blocked) {
                 return $this->errorResponse('Failed - The resource is blocked.', null, 403);
             }
+            if ($record->expires_at && now()->gt($record->expires_at)) {
+                return $this->errorResponse('Failed - The resource has expired.', null, 410);
+            }
             if (! $record->is_active) {
                 return $this->errorResponse('Failed - The resource is set inactive by the owner.', null, 403);
             }
 
             $clickService->logClick($record->id, $request);
 
-            return redirect($record->url);
+            return redirect($record->url, 301);
         } catch (Throwable $e) {
             return $this->errorResponse('Failed', ['exception' => $e->getMessage()], 404);
         }
