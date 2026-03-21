@@ -14,5 +14,8 @@ Route::post('shorten', [ShortenController::class, 'store'])
 Route::resource('url', ShortenController::class)->only(['index', 'show', 'update', 'destroy'])
     ->middleware('access.token.auth');
 
+Route::get('url/{url}/stat', [ShortenController::class, 'getUrlStats'])
+    ->middleware('access.token.auth');
+
 Route::resource('/clicks', ClicksController::class)->only(['index', 'destroy'])
     ->middleware('access.token.auth');

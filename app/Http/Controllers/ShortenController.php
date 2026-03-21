@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DeleteUrlRequest;
+use App\Http\Requests\GetUrlStatsRequest;
 use App\Http\Requests\StoreUrlRequest;
 use App\Http\Requests\UpdateUrlRequest;
+use App\Models\Click;
 use App\Models\Url;
 use App\Services\ClickService;
 use App\Services\UrlShortnerService;
@@ -172,6 +174,58 @@ class ShortenController extends Controller
             return redirect($record->url);
         } catch (Throwable $e) {
             return $this->errorResponse('Failed', ['exception' => $e->getMessage()], 404);
+        }
+    }
+
+    /**
+     * Return stats related to a url.
+     */
+    public function getUrlStats(GetUrlStatsRequest $request, Url $url)
+    {
+        try {
+            $cacheKey = "click_stats_{$url->id}_{$request->from}_{$request->to}_{$request->group_by}";
+
+            // cache for 10 minutes
+            $stats = Cache::remember($cacheKey, 60 * 10, function () use ($url, $request) {
+                // unlimited counts for accurate totals
+                $totalQuery = Click::where('url_id', $url->id)
+                    ->when($request->from, fn ($q) => $q->whereDate('clicked_at', '>=', $request->from))
+                    ->when($request->to, fn ($q) => $q->whereDate('clicked_at', '<=', $request->to));
+
+                // limited dataset for heavy aggregations
+                $baseIds = (clone $totalQuery)
+                    ->orderBy('clicked_at', 'desc')
+                    ->limit(10000)
+                    ->pluck('id');
+
+                $clicks = Click::whereIn('id', $baseIds);
+
+                // group by option
+                $groupBy = $request->group_by ?? 'day';
+                $byTime = match ($groupBy) {
+                    'week' => (clone $clicks)->selectRaw('YEARWEEK(clicked_at) as date, COUNT(*) as count')
+                        ->groupBy('date')->orderBy('date')->get(),
+                    'month' => (clone $clicks)->selectRaw('DATE_FORMAT(clicked_at, "%Y-%m") as date, COUNT(*) as count')
+                        ->groupBy('date')->orderBy('date')->get(),
+                    default => (clone $clicks)->selectRaw('DATE(clicked_at) as date, COUNT(*) as count')
+                        ->groupBy('date')->orderBy('date')->get(),
+                };
+
+                return [
+                    'message' => 'Except from total and unique, only last ten thousand clicks will be considered for analytics.',
+                    'total' => $totalQuery->count(),
+                    'unique' => $totalQuery->distinct('ip')->count('ip'),
+                    'byTime' => $byTime,
+                    'byCountry' => (clone $clicks)->selectRaw('country, COUNT(*) as count')
+                        ->groupBy('country')->orderByDesc('count')->limit(10)->get(),
+                    'byReferrer' => (clone $clicks)->selectRaw('referrer, COUNT(*) as count')
+                        ->groupBy('referrer')->orderByDesc('count')->limit(10)->get(),
+                ];
+            });
+
+            return $this->successResponse($stats);
+        } catch (Throwable $e) {
+            return $this->errorResponse('Failed', ['exception' => $e->getMessage()], 401);
         }
     }
 }
